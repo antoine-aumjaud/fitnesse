@@ -24,10 +24,7 @@ public class CallInstruction extends Instruction {
 
   public CallInstruction(String id, String instanceName, String methodName, Object[] args,
                          NameTranslator methodNameTranslator) {
-    super(id);
-    this.instanceName = instanceName;
-    this.methodName = methodNameTranslator.translate(methodName);
-    this.args = args;
+    this(id, instanceName, methodNameTranslator.translate(methodName), args);
   }
 
   @Override

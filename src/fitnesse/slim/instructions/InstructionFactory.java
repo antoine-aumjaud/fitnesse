@@ -1,5 +1,6 @@
 package fitnesse.slim.instructions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import fitnesse.slim.NameTranslator;
@@ -42,11 +43,12 @@ public class InstructionFactory {
   private static CallAndAssignInstruction createCallAndAssignInstruction(String id,
                                                                          List<Object> words,
                                                                          NameTranslator methodNameTranslator) {
-    String symbolName = getWord(words, 2);
+    List<String> symbolNames = getList(words, 2);
     String instanceName = getWord(words, 3);
     String methodName = getWord(words, 4);
     Object[] args = makeArgsArray(words, 5);
-    return new CallAndAssignInstruction(id, symbolName, instanceName, methodName, args, methodNameTranslator);
+    return new CallAndAssignInstruction(id, symbolNames, instanceName,
+        methodName, args, methodNameTranslator);
   }
 
   private static CallInstruction createCallInstruction(String id, List<Object> words,
@@ -70,7 +72,17 @@ public class InstructionFactory {
     try {
       return (String) words.get(word);
     } catch (Exception e) {
-      throw new SlimError(format("message:<<%s %s.>>", SlimServer.MALFORMED_INSTRUCTION, wordsToString(words)));
+      throw new SlimError(format("message:<<%s %s.>>",
+          SlimServer.MALFORMED_INSTRUCTION, wordsToString(words)), e);
+    }
+  }
+
+  private static ArrayList<String> getList(List<Object> words, int word) {
+    try {
+      return (ArrayList<String>) words.get(word);
+    } catch (Exception e) {
+      throw new SlimError(format("message:<<%s %s.>>",
+          SlimServer.MALFORMED_INSTRUCTION, wordsToString(words)), e);
     }
   }
 

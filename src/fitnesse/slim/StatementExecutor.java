@@ -7,10 +7,13 @@ import fitnesse.slim.converters.MapEditor;
 import java.beans.PropertyEditorManager;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import static java.lang.String.format;
+import static util.ListUtility.list;
+
 
 /**
  * This is the API for executing a SLIM statement. This class should not know about the syntax of a SLIM statement.
@@ -95,19 +98,18 @@ public class StatementExecutor implements StatementExecutorInterface {
 
   @Override
   public Object call(String instanceName, String methodName, Object... args) throws SlimException {
-    try {
-      return getMethodExecutionResult(instanceName, methodName, args).returnValue();
-    } catch (Throwable e) {
-      checkExceptionForStop(e);
-      throw new SlimException(e);
-    }
+    return callAndAssign(Collections.<String> emptyList(), instanceName, methodName, args);
   }
 
   @Override
   public Object callAndAssign(String variable, String instanceName, String methodName, Object... args) throws SlimException {
+    return callAndAssign(list(variable), instanceName, methodName, args);
+  }
+  @Override
+  public Object callAndAssign(List<String> variables, String instanceName, String methodName, Object... args) throws SlimException {
     try {
       MethodExecutionResult result = getMethodExecutionResult(instanceName, methodName, args);
-      context.setVariable(variable, result);
+      context.setVariable(variables.get(0), result);
       return result.returnValue();
     } catch (Throwable e) {
       checkExceptionForStop(e);

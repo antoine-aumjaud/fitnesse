@@ -1,9 +1,11 @@
 package fitnesse.slim;
 
+import java.util.List;
 import java.util.concurrent.*;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static util.ListUtility.list;
 
 public class StatementTimeoutExecutor implements StatementExecutorInterface {
   private final StatementExecutorInterface inner;
@@ -71,18 +73,29 @@ public class StatementTimeoutExecutor implements StatementExecutorInterface {
   }
 
   @Override
-  public Object callAndAssign(final String symbolName, final String instanceName, final String methodsName, final Object... arguments) throws SlimException {
+  public Object callAndAssign(final List<String> symbolNames,
+      final String instanceName, final String methodsName,
+      final Object... arguments) throws SlimException {
     Future<Object> submit = service.submit(new Callable<Object>() {
       @Override
       public Object call() throws Exception {
-        return inner.callAndAssign(symbolName, instanceName, methodsName, arguments);
+        return inner.callAndAssign(symbolNames, instanceName, methodsName,
+            arguments);
       }
     });
     try {
       return getWithTimeout(submit);
     } catch (TimeoutException e) {
-      throw new SlimException("timed out in callAndAssign, symbolName : " + symbolName + ", instanceName : " + instanceName + ", methodsName : " + methodsName + ", statementTimeout : " + timeout + " seconds");
+      throw new SlimException("timed out in callAndAssign, symbolName : "
+          + symbolNames + ", instanceName : " + instanceName
+          + ", methodsName : " + methodsName + ", statementTimeout : "
+          + timeout + " seconds");
     }
+  }
+
+  @Override
+  public Object callAndAssign(final String symbolName, final String instanceName, final String methodsName, final Object... arguments) throws SlimException {
+    return callAndAssign(list(symbolName), instanceName, methodsName, arguments);
   }
 
   @Override

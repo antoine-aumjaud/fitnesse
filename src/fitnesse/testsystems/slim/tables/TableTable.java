@@ -26,9 +26,20 @@ public class TableTable extends SlimTable {
   }
 
   public List<SlimAssertion> getAssertions() {
+    List<String> symbols = new ArrayList<String>();
+    int rows = table.getRowCount();
+    for (int row = 1; row < rows; row++) {
+      int cols = table.getColumnCountInRow(row);
+      for (int col = 0; col < cols; col++) {
+        String match;
+        if ((match = ifSymbolAssignment(col, row)) != null)
+          symbols.add(match);
+      }
+    }
+    
     SlimAssertion make = constructFixture(getFixtureName());
-    Instruction doTable = callFunction(getTableName(), "doTable", tableAsList());
-    //String doTableId = doTable.getId();
+    Instruction doTable = callAndAssign(symbols, getTableName(), "doTable", tableAsList());
+
     return list(make, makeAssertion(doTable, new TableTableExpectation()));
   }
 

@@ -160,12 +160,18 @@ public class SlimCommandRunningClient implements SlimClient {
           statementsAsList.add(list(instruction.getId(), ImportInstruction.INSTRUCTION, path));
         }
 
+
         @Override
-        public Object callAndAssign(String symbolName, String instanceName, String methodsName, Object... arguments) throws SlimException {
-          List<Object> list = ListUtility.list((Object) instruction.getId(), CallAndAssignInstruction.INSTRUCTION, symbolName, instanceName, methodsName);
+        public Object callAndAssign(List<String> symbolNames, String instanceName, String methodsName, Object... arguments) throws SlimException {
+          List<Object> list = ListUtility.list((Object) instruction.getId(), CallAndAssignInstruction.INSTRUCTION, symbolNames, instanceName, methodsName);
           addArguments(list, arguments);
           statementsAsList.add(list);
           return null;
+        }
+        
+        @Override
+        public Object callAndAssign(String symbolName, String instanceName, String methodsName, Object... arguments) throws SlimException {
+          return callAndAssign(list(symbolName), instanceName,  methodsName, arguments);
         }
 
         @Override
