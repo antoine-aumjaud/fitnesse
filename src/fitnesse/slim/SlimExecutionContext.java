@@ -34,10 +34,12 @@ public class SlimExecutionContext {
           int col = Integer.parseInt(variableCarateristique[1]);
           String symboleName = variableCarateristique[2];
           String objectValue = obj.get(row).get(col);
-          int pos = objectValue.indexOf(":");
-          if (pos > 0)
-            objectValue = objectValue.substring(pos + 1);
-          variables.setSymbol(symboleName, new MethodExecutionResult(objectValue, String.class));
+          if(objectValue != null ){
+            int pos = objectValue.indexOf(":");
+            if (pos > 0)
+              objectValue = objectValue.substring(pos + 1);
+            setVariable(symboleName, objectValue);
+          }
         }
       }
       variables.setSymbol(name, value);
