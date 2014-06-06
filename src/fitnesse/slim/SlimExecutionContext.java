@@ -24,7 +24,23 @@ public class SlimExecutionContext {
     }
 
     public void setVariable(String name, MethodExecutionResult value) {
-        variables.setSymbol(name, value);
+      if (VariableStore.VARIABLE_LIST_INDICATOR.startsWith(name)) {
+        @SuppressWarnings("unchecked")
+        List<List<String>> obj = (List<List<String>>) value.getObject();
+        String variableStructure[] = name.split(";");
+        for (int i = 1; i < variableStructure.length; i++) {
+          String[] variableCarateristique = variableStructure[i].split("-");
+          int row = Integer.parseInt(variableCarateristique[0]);
+          int col = Integer.parseInt(variableCarateristique[1]);
+          String symboleName = variableCarateristique[2];
+          String objectValue = obj.get(row).get(col);
+          int pos = objectValue.indexOf(":");
+          if (pos > 0)
+            objectValue = objectValue.substring(pos + 1);
+          variables.setSymbol(symboleName, new MethodExecutionResult(objectValue, String.class));
+        }
+      }
+      variables.setSymbol(name, value);
     }
 
     public void setVariable(String name, Object value) {

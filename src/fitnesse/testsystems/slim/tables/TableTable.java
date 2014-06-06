@@ -5,6 +5,7 @@ package fitnesse.testsystems.slim.tables;
 import java.util.ArrayList;
 import java.util.List;
 
+import fitnesse.slim.VariableStore;
 import fitnesse.slim.instructions.Instruction;
 import fitnesse.testsystems.ExecutionResult;
 import fitnesse.testsystems.TestResult;
@@ -26,9 +27,21 @@ public class TableTable extends SlimTable {
   }
 
   public List<SlimAssertion> getAssertions() {
+    
+    String symbols = VariableStore.VARIABLE_LIST_INDICATOR;
+    int rows = table.getRowCount();
+    for (int row = 1; row < rows; row++) {
+      int cols = table.getColumnCountInRow(row);
+      for (int col = 0; col < cols; col++) {
+        String match;
+        if ((match = ifSymbolAssignment(col, row)) != null) {
+          symbols += ";" + (row - 1) + "-" + col + "-" + match;
+        }
+      }
+    }
+    
     SlimAssertion make = constructFixture(getFixtureName());
-    Instruction doTable = callFunction(getTableName(), "doTable", tableAsList());
-    //String doTableId = doTable.getId();
+    Instruction doTable = callAndAssign(symbols, getTableName(), "doTable", tableAsList());
     return list(make, makeAssertion(doTable, new TableTableExpectation()));
   }
 

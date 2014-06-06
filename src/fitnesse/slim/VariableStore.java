@@ -8,6 +8,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VariableStore {
+  public static final String VARIABLE_LIST_INDICATOR = "_VLI_";
+
   private static final Pattern SYMBOL_PATTERN = Pattern.compile("\\$([a-zA-Z]\\w*)");
   private Map<String, MethodExecutionResult> variables = new HashMap<String, MethodExecutionResult>();
   private Matcher symbolMatcher;
