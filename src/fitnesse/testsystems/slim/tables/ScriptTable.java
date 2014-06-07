@@ -273,7 +273,7 @@ public class ScriptTable extends SlimTable {
     int classNameColumn = 1;
     String cellContents = table.getCellContents(classNameColumn, row);
     String className = Disgracer.disgraceClassName(cellContents);
-    return list(constructInstance(getTableType() + "Actor", className, classNameColumn, row));
+    return list(constructInstance(getTableType() + "Actor", className, null, classNameColumn, row));
   }
 
   class ArgumentExtractor {

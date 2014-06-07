@@ -7,7 +7,7 @@ import java.util.Arrays;
 public class MakeInstruction extends Instruction {
   public static final String INSTRUCTION = "make";
   private final String instanceName;
-  private final String className;
+  private final String className, proxyClassName;
   private final Object[] args;
 
   public MakeInstruction(String id, String instanceName, String className) {
@@ -15,15 +15,22 @@ public class MakeInstruction extends Instruction {
   }
 
   public MakeInstruction(String id, String instanceName, String className, Object[] args) {
+    this(id, instanceName, className, args, null);
+  }
+
+  public MakeInstruction(String id, String instanceName, String className,
+      Object[] args, String proxyClassName) {
     super(id);
     this.instanceName = instanceName;
     this.className = className;
     this.args = args;
+    this.proxyClassName = proxyClassName;
   }
+
 
   @Override
   protected InstructionResult executeInternal(InstructionExecutor executor) throws SlimException {
-    executor.create(instanceName, className, args);
+    executor.create(instanceName, className, proxyClassName, args);
     return new InstructionResult.Ok(getId());
   }
 

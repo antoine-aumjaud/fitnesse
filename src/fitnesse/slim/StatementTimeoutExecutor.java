@@ -55,11 +55,13 @@ public class StatementTimeoutExecutor implements StatementExecutorInterface {
   }
 
   @Override
-  public void create(final String instanceName, final String className, final Object... constructorArgs) throws SlimException {
+  public void create(final String instanceName, final String className,
+      final String proxyClassName, final Object... constructorArgs)
+      throws SlimException {
     Future<?> submit = service.submit(new Callable<Boolean>() {
       @Override
       public Boolean call() throws Exception {
-        inner.create(instanceName, className, constructorArgs);
+        inner.create(instanceName, className, proxyClassName, constructorArgs);
         return true;
       }
     });

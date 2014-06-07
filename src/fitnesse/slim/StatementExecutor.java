@@ -70,9 +70,9 @@ public class StatementExecutor implements StatementExecutorInterface {
   }
 
   @Override
-  public void create(String instanceName, String className, Object... args) throws SlimException {
+  public void create(String instanceName, String className, String proxyClassName, Object... args) throws SlimException {
     try {
-      context.create(instanceName, className, args);
+      context.create(instanceName, className, proxyClassName, args);
       // TODO Hack for supporting SlimHelperLibrary, please remove.
       Object newInstance = context.getInstance(instanceName);
       if (newInstance instanceof StatementExecutorConsumer) {

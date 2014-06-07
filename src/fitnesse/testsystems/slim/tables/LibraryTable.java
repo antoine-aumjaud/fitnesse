@@ -21,7 +21,7 @@ public class LibraryTable extends SlimTable {
     for (int row = 1; row < table.getRowCount(); row++) {
       String disgracedClassName = Disgracer.disgraceClassName(table.getCellContents(0, row));
       if (disgracedClassName.length() > 0) {
-        instructions.add(constructInstance("library" + row, disgracedClassName, 0, row));
+        instructions.add(constructInstance("library" + row, disgracedClassName, null, 0, row));
       }
     }
     return instructions;

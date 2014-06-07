@@ -1,7 +1,9 @@
 package fitnesse.slim;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.util.*;
 
 import fitnesse.slim.fixtureInteraction.FixtureInteraction;
@@ -31,16 +33,15 @@ public class SlimExecutionContext {
         setVariable(name, new MethodExecutionResult(value, Object.class));
     }
 
-    public void create(String instanceName, String className, Object[] args)
+  public void create(String instanceName, String className,
+      String proxyClassName, Object[] args)
             throws SlimError, IllegalArgumentException, IllegalAccessException, InvocationTargetException,
-            InstantiationException {
+            InstantiationException, SecurityException, NoSuchMethodException {
         if (hasStoredActor(className)) {
             addToInstancesOrLibrary(instanceName, getStoredActor(className));
         } else {
-            String replacedClassName = variables
-                    .replaceSymbolsInString(className);
-            Object instance = createInstanceOfConstructor(
-                    replacedClassName, replaceSymbols(args));
+            String replacedClassName = variables.replaceSymbolsInString(className);
+            Object instance = createInstanceOfConstructor(proxyClassName, replacedClassName, replaceSymbols(args));
             addToInstancesOrLibrary(instanceName, instance);
         }
     }
@@ -94,28 +95,34 @@ public class SlimExecutionContext {
         return instanceName.startsWith("library");
     }
 
-    private Object createInstanceOfConstructor(String className, Object[] args)
+  private Object createInstanceOfConstructor(String proxyClassName,
+      String className, Object[] args)
             throws IllegalArgumentException, InstantiationException,
-            IllegalAccessException, InvocationTargetException {
+            IllegalAccessException, InvocationTargetException, SecurityException, NoSuchMethodException {
         Class<?> k = searchPathsForClass(className);
+        Class<InvocationHandler> proxyClass = proxyClassName != null ? (Class<InvocationHandler>)searchPathsForClass(className) : null;
         Constructor<?> constructor = getConstructor(k.getConstructors(), args);
         if (constructor == null) {
             throw new SlimError(String.format("message:<<%s %s>>",
                     SlimServer.NO_CONSTRUCTOR, className));
         }
 
-        return newInstance(args, constructor);
+        return newInstance(proxyClass, constructor, args);
     }
 
-    private Object newInstance(Object[] args, Constructor<?> constructor)
+    private Object newInstance(Class<InvocationHandler> proxyClass, Constructor<?> constructor, Object[] args)
             throws IllegalAccessException, InstantiationException,
-            InvocationTargetException {
-        Object[] initargs = ConverterSupport.convertArgs(args,
-                constructor.getParameterTypes());
+            InvocationTargetException, IllegalArgumentException, SecurityException, NoSuchMethodException {
+        Object[] initargs = ConverterSupport.convertArgs(args, constructor.getParameterTypes());
 
-        FixtureInteraction interaction = SlimService.getInteractionClass()
-                .newInstance();
-        return interaction.newInstance(constructor, initargs);
+        FixtureInteraction interaction = SlimService.getInteractionClass().newInstance();
+        Object instance = interaction.newInstance(constructor, initargs);
+        if (proxyClass != null) {
+          InvocationHandler proxyInstance  = proxyClass.getConstructor(new Class[] { Object.class }).newInstance(instance);
+          instance = (Object) Proxy.newProxyInstance(instance.getClass()
+              .getClassLoader(), new Class[] { instance.getClass() }, proxyInstance);
+        }
+        return instance;
     }
 
     private Class<?> searchPathsForClass(String className) {

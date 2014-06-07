@@ -13,7 +13,6 @@ import fitnesse.testsystems.slim.SlimTestContext;
 import fitnesse.testsystems.slim.Table;
 import fitnesse.testsystems.slim.results.SlimExceptionResult;
 import fitnesse.testsystems.slim.results.SlimTestResult;
-import static util.ListUtility.list;
 
 public class TableTable extends SlimTable {
 
@@ -26,10 +25,23 @@ public class TableTable extends SlimTable {
   }
 
   public List<SlimAssertion> getAssertions() {
-    SlimAssertion make = constructFixture(getFixtureName());
-    Instruction doTable = callFunction(getTableName(), "doTable", tableAsList());
-    //String doTableId = doTable.getId();
-    return list(make, makeAssertion(doTable, new TableTableExpectation()));
+    List<SlimAssertion> instructions = new ArrayList<SlimAssertion>();
+    instructions.add(constructFixture(getFixtureName(), TableTableProxy.class.getCanonicalName()));
+    instructions.add(makeAssertion(callFunction(getTableName(), "doTable", tableAsList()), new TableTableExpectation()));
+
+    int rows = table.getRowCount();
+    for (int row = 1; row < rows; row++) {
+      int cols = table.getColumnCountInRow(row);
+      for (int col = 0; col < cols; col++) {
+        String match;
+        if ((match = ifSymbolAssignment(col, row)) != null) {
+          Instruction instruction = callAndAssign(match, getTableName(), "getValue",  String.valueOf(row - 1), String.valueOf(col));
+          SlimExpectation expectation = new SymbolAssignmentExpectation(match, col, row);
+          instructions.add(makeAssertion(instruction, expectation));
+        }
+      }
+    }
+    return instructions;
   }
 
   public class TableTableExpectation implements SlimExpectation {
@@ -145,11 +157,12 @@ public class TableTable extends SlimTable {
   }
 
   private String manageSymbolInContent(String content, String message) {
-    String symbolName = ifSymbolAssignment(content);
-    if (symbolName != null) {
-      setSymbol(symbolName, message);
-      message = String.format("$%s<-[%s]", symbolName, message);
-    }
+    //    String symbolName = ifSymbolAssignment(content); //TOAA
+    //    if (symbolName != null) {
+    //      setSymbol(symbolName, message);
+    //      message = String.format("$%s<-[%s]", symbolName, message);
+    //    }
     return message;
   }
 }
+

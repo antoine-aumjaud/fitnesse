@@ -102,10 +102,6 @@ public abstract class SlimTable {
     return table;
   }
 
-  protected SlimAssertion constructFixture(String fixtureName) {
-    return constructInstance(getTableName(), fixtureName, 0, 0);
-  }
-
   protected String getFixtureName() {
     String tableHeader = table.getCellContents(0, 0);
     String fixtureName = getFixtureName(tableHeader);
@@ -118,9 +114,17 @@ public abstract class SlimTable {
     return tableHeader.split(":")[1];
   }
 
-  protected SlimAssertion constructInstance(String instanceName, String className, int classNameColumn, int row) {
-    RowExpectation expectation = new ConstructionExpectation(classNameColumn, row);
-    return makeAssertion(new MakeInstruction(makeInstructionTag(), instanceName, className, gatherConstructorArgumentsStartingAt(classNameColumn + 1, row)),
+  protected SlimAssertion constructFixture(String fixtureName) {
+    return constructInstance(getTableName(), fixtureName, null, 0, 0);
+  }
+
+  protected SlimAssertion constructFixture(String fixtureName, String proxy) {
+    return constructInstance(getTableName(), fixtureName, proxy, 0, 0);
+  }
+
+  protected SlimAssertion constructInstance(String instanceName, String className, String proxyClassName, int classNameColumn, int classNameRow) {
+    RowExpectation expectation = new ConstructionExpectation(classNameColumn, classNameRow);
+    return makeAssertion(new MakeInstruction(makeInstructionTag(), instanceName, className, gatherConstructorArgumentsStartingAt(classNameColumn + 1, classNameRow), proxyClassName),
             expectation);
   }
 

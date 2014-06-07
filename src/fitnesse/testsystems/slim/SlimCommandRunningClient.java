@@ -177,8 +177,8 @@ public class SlimCommandRunningClient implements SlimClient {
         }
 
         @Override
-        public void create(String instanceName, String className, Object... constructorArgs) throws SlimException {
-          List<Object> list = ListUtility.list((Object) instruction.getId(), MakeInstruction.INSTRUCTION, instanceName, className);
+        public void create(String instanceName, String className,  String proxyClassName, Object... constructorArgs) throws SlimException {
+          List<Object> list = ListUtility.list((Object) instruction.getId(), MakeInstruction.INSTRUCTION, instanceName, className, proxyClassName);
           addArguments(list, constructorArgs);
           statementsAsList.add(list);
         }
