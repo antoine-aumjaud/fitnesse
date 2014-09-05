@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fitnesse.slim.RegexpExtractSymbolValue;
-import fitnesse.slim.TableTableExtractSymbol;
 import fitnesse.slim.instructions.Instruction;
 import fitnesse.slim.instructions.MakeInstruction;
 import fitnesse.testsystems.ExecutionResult;
@@ -18,7 +17,7 @@ import fitnesse.testsystems.slim.results.SlimExceptionResult;
 import fitnesse.testsystems.slim.results.SlimTestResult;
 
 public class TableTable extends SlimTable {
-  public static String EXTRACT_REGEXP = "\\w+:(.*)";
+  private static String EXTRACT_REGEXP = "\\w+:(.*)";
 
   public TableTable(Table table, String tableId, SlimTestContext slimTestContext) {
     super(table, tableId, slimTestContext);
