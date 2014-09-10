@@ -4,6 +4,9 @@ package fitnesse.testsystems.slim.tables;
 
 import java.util.*;
 
+import fitnesse.slim.RegexpExtractSymbolValue;
+import fitnesse.slim.instructions.Instruction;
+import fitnesse.slim.instructions.MakeInstruction;
 import fitnesse.testsystems.ExecutionResult;
 import fitnesse.testsystems.TestResult;
 import fitnesse.testsystems.slim.SlimTestContext;
@@ -11,12 +14,11 @@ import fitnesse.testsystems.slim.Table;
 import fitnesse.testsystems.slim.results.SlimExceptionResult;
 import fitnesse.testsystems.slim.results.SlimTestResult;
 
-import static util.ListUtility.list;
-
 public class QueryTable extends SlimTable {
+  private static String EXTRACT_REGEXP = "\\w+:(.*)";
   private static final String COMMENT_COLUMN_MARKER = "#";
+
   protected List<String> fieldNames = new ArrayList<String>();
-  private String queryId;
 
   public QueryTable(Table table, String id, SlimTestContext testContext) {
     super(table, id, testContext);
@@ -46,17 +48,38 @@ public class QueryTable extends SlimTable {
 
   @Override
   public List<SlimAssertion> getAssertions() throws SyntaxError {
-    if (table.getRowCount() < 2)
+    int rows = table.getRowCount();
+    if (rows < 2)
       throw new SyntaxError("Query tables must have at least two rows.");
     assignColumns();
-    SlimAssertion make = constructFixture(getFixtureName());
-    SlimAssertion ti = makeAssertion(callFunction(getTableName(), "table", tableAsList()),
-            new SilentReturnExpectation(0, 0));
-    SlimAssertion qi = makeAssertion(callFunction(getTableName(), "query"),
-            new QueryTableExpectation());
-    String tableInstruction = ti.getInstruction().getId();
-    queryId = qi.getInstruction().getId();
-    return list(make, ti, qi);
+
+    String tableName = getTableName();
+    List<SlimAssertion> setSymbolsAssertions = new ArrayList<SlimAssertion>();
+    for (int row = 2; row < rows; row++) {
+      int cols = table.getColumnCountInRow(row);
+      for (int col = 0; col < cols; col++) {
+        String match;
+        if ((match = ifSymbolAssignment(col, row)) != null) {
+          Instruction instruction = callAndAssign(match, tableName + "_EXTRACT", "getValue", String.valueOf(row - 1), String.valueOf(col));
+          setSymbolsAssertions.add(makeAssertion(instruction, SlimExpectation.NOOP_EXPECTATION));
+        }
+      }
+    }
+
+    List<SlimAssertion> assertions = new ArrayList<SlimAssertion>();
+    assertions.add(constructFixture(getFixtureName()));
+    assertions.add(makeAssertion(callFunction(tableName, "table", tableAsList()), new SilentReturnExpectation(0, 0)));
+
+    if (setSymbolsAssertions.size() > 0) {
+      assertions.add(makeAssertion(callAndAssign(tableName, tableName, "query"), new QueryTableExpectation()));
+      assertions.add(makeAssertion(new MakeInstruction(makeInstructionTag(), tableName + "_EXTRACT", 
+          RegexpExtractSymbolValue.class.getCanonicalName(), new Object[] {"$" + tableName, EXTRACT_REGEXP }), SlimExpectation.NOOP_EXPECTATION));
+
+      assertions.addAll(setSymbolsAssertions);
+    } else {
+      assertions.add(makeAssertion(callFunction(getTableName(), "query"), new QueryTableExpectation()));
+    }
+    return assertions;
   }
 
   private void assignColumns() {
@@ -70,8 +93,8 @@ public class QueryTable extends SlimTable {
     @Override
     public TestResult evaluateExpectation(Object queryReturn) {
       SlimTestResult testResult;
-      if (queryId == null || queryReturn == null) {
-        testResult = SlimTestResult.error("query method did not return a list");
+      if (queryReturn == null) {
+        testResult = SlimTestResult.error("Query method did not return a list");
         table.updateContent(0, 0, testResult);
         getTestContext().increment(testResult.getExecutionResult());
       } else if (queryReturn instanceof List) {
@@ -213,19 +236,24 @@ public class QueryTable extends SlimTable {
     String actualValue = queryResults.getCell(fieldName, matchedRow);
     String expectedValue = table.getCellContents(col, tableRow);
     SlimTestResult testResult;
-    if (fieldName.startsWith(COMMENT_COLUMN_MARKER)) {
+    if (fieldName.startsWith(COMMENT_COLUMN_MARKER))
       testResult = SlimTestResult.plain();
-    }
     else if (actualValue == null)
       testResult = SlimTestResult.fail(String.format("field %s not present", fieldName), expectedValue);
     else if (expectedValue == null || expectedValue.length() == 0)
       testResult = SlimTestResult.ignore(actualValue);
     else {
-      testResult = matchMessage(actualValue, expectedValue);
-      if (testResult == null)
-        testResult = SlimTestResult.fail(actualValue, replaceSymbolsWithFullExpansion(expectedValue));
-      else if (testResult.getExecutionResult() == ExecutionResult.PASS)
-        testResult = markMatch(tableRow, matchedRow, col, testResult.getMessage());
+      String symbolName = ifSymbolAssignment(expectedValue);
+      if (symbolName != null) {
+        setSymbol(symbolName, actualValue);
+        testResult = SlimTestResult.ignore(String.format("$%s<-[%s]", symbolName, actualValue));
+      } else {
+        testResult = matchMessage(actualValue, expectedValue);
+        if (testResult == null)
+          testResult = SlimTestResult.fail(actualValue, replaceSymbolsWithFullExpansion(expectedValue));
+        else if (testResult.getExecutionResult() == ExecutionResult.PASS)
+          testResult = markMatch(tableRow, matchedRow, col, testResult.getMessage());
+      }
     }
     table.updateContent(col, tableRow, testResult);
     getTestContext().increment(testResult.getExecutionResult());
