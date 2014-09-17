@@ -22,10 +22,11 @@ import fitnesse.wiki.WikiPage;
 import fitnesse.wiki.WikiPageUtil;
 import fitnesse.wiki.mem.InMemoryPage;
 import fitnesse.wikitext.Utils;
+
 import org.junit.Before;
 import org.junit.Test;
-import util.ListUtility;
 
+import util.ListUtility;
 import static org.junit.Assert.assertEquals;
 import static util.ListUtility.list;
 
@@ -358,6 +359,24 @@ public abstract class QueryTableTestBase {
   protected void evaluateResults(Map<String, Object> pseudoResults, String expectedTable) {
     SlimAssertion.evaluateExpectations(assertions, pseudoResults);
     org.junit.Assert.assertEquals(expectedTable, qt.getTable().toString());
+  }
+
+
+  @Test
+  public void tableWithSetSymbols() throws Exception {
+    makeQueryTableAndBuildInstructions(queryTableHeader + "|1|$A=|\n");
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+        list(
+            list("queryTable_id_1", "OK"), 
+            list("queryTable_id_3", list(list(list("n", "1"), list("2n", "2"))))
+        )
+    );
+    evaluateResults(pseudoResults, "[" + 
+        headRow +
+        "[n, 2n], " + 
+        "[pass(1), ignore($A<-[2])]" + "]");
+
+    assertEquals("2", qt.getSymbol("A"));
   }
 
   @Test

@@ -34,6 +34,10 @@ public class SlimAssertion implements Assertion {
     return expectation;
   }
 
+  public String toString() {
+    return String.format("instruction: %s%nassertion: %s%n", instruction.toString(), expectation.toString());
+  }
+
   /**
    * Get Instructions from the assertions; NOOP's are filtered out.
    * @param assertions

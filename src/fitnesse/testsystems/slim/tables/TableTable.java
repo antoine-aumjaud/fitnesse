@@ -17,7 +17,7 @@ import fitnesse.testsystems.slim.results.SlimExceptionResult;
 import fitnesse.testsystems.slim.results.SlimTestResult;
 
 public class TableTable extends SlimTable {
-  private static String EXTRACT_REGEXP = "\\w+:(.*)";
+  public static final String EXTRACT_REGEXP = "\\w+:(.*)";
 
   public TableTable(Table table, String tableId, SlimTestContext slimTestContext) {
     super(table, tableId, slimTestContext);

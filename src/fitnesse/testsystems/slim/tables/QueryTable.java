@@ -15,7 +15,7 @@ import fitnesse.testsystems.slim.results.SlimExceptionResult;
 import fitnesse.testsystems.slim.results.SlimTestResult;
 
 public class QueryTable extends SlimTable {
-  private static String EXTRACT_REGEXP = "\\w+:(.*)";
+  public static final String EXTRACT_REGEXP = "ignore:(.*)";
   private static final String COMMENT_COLUMN_MARKER = "#";
 
   protected List<String> fieldNames = new ArrayList<String>();
@@ -74,7 +74,7 @@ public class QueryTable extends SlimTable {
       assertions.add(makeAssertion(callAndAssign(tableName, tableName, "query"), new QueryTableExpectation()));
       assertions.add(makeAssertion(new MakeInstruction(makeInstructionTag(), tableName + "_EXTRACT", 
           RegexpExtractSymbolValue.class.getCanonicalName(), new Object[] {"$" + tableName, EXTRACT_REGEXP }), SlimExpectation.NOOP_EXPECTATION));
-
+      //l'idée serait de appeler un callAndAssign mais le call sue le java
       assertions.addAll(setSymbolsAssertions);
     } else {
       assertions.add(makeAssertion(callFunction(getTableName(), "query"), new QueryTableExpectation()));

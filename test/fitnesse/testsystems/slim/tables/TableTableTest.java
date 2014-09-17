@@ -307,11 +307,6 @@ public class TableTableTest {
         + "|$A=|$B=|$C=|$D=|$E=|$F=|\n");
     Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
             list(
-                    list("tableTable_id_1", "1"),
-                    list("tableTable_id_2", "2"),
-                    list("tableTable_id_3", "3"),
-                    list("tableTable_id_4", "sole:l"),
-                    list("tableTable_id_5", "OK"),
                     list("tableTable_id_6", "OK"),
                     list("tableTable_id_7", list(
                         list("pass:1", "ignore:2", "fail:3", "sole:l", "no change", "pass")
